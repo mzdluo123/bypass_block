@@ -45,7 +45,10 @@ async def handle_socks(reader: asyncio.StreamReader, writer: asyncio.StreamWrite
         size = await reader.readexactly(1)
         address = await reader.readexactly(int.from_bytes(size, 'little'))
         address = address.decode()
-
+    if address == None:
+        reader.feed_eof()
+        writer.close()
+        return
     port = int.from_bytes(await reader.readexactly(2), 'big', signed=False)
     proxy = random.choice(SERVER_LIST)
     pr, pw = await asyncio.open_connection(proxy, PROXY_PORT)
