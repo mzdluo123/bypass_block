@@ -4,6 +4,7 @@ import random
 
 from config import SERVER_LIST, PROXY_PORT, BUFFER
 from print_bw import upload_queue, download_queue
+from utils import copy
 
 
 async def handle_socks(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -42,10 +43,10 @@ async def handle_socks(reader: asyncio.StreamReader, writer: asyncio.StreamWrite
             return
     if atyp == b'\x03':
         size = await reader.readexactly(1)
-        address = await reader.readexactly(int.from_bytes(size,'little'))
+        address = await reader.readexactly(int.from_bytes(size, 'little'))
         address = address.decode()
 
-    port = int.from_bytes(await reader.readexactly(2),'big',signed=False)
+    port = int.from_bytes(await reader.readexactly(2), 'big', signed=False)
     proxy = random.choice(SERVER_LIST)
     pr, pw = await asyncio.open_connection(proxy, PROXY_PORT)
     print(f"SOCKS {socket[0]}:{socket[1]} --{proxy}--> {address}:{port}")
@@ -57,31 +58,12 @@ async def handle_socks(reader: asyncio.StreamReader, writer: asyncio.StreamWrite
     writer.write(atyp)
     if atyp == b'\x03':
         encoded = address.encode()
-        writer.write(int.to_bytes(len(encoded),1,'little'))
+        writer.write(int.to_bytes(len(encoded), 1, 'little'))
         writer.write(encoded)
     else:
-        writer.write(int.to_bytes(int(address),4,'little'))
-    writer.write(int.to_bytes(port,2,'big',signed=False))
+        writer.write(int.to_bytes(int(address), 4, 'little'))
+    writer.write(int.to_bytes(port, 2, 'big', signed=False))
     await pr.readline()
     await pr.readline()
-
-    async def __upload():
-        while not pw.is_closing():
-            data = await reader.read(BUFFER)
-            if len(data) == 0:
-                return
-
-            await upload_queue.put(len(data))
-            pw.write(data)
-
-    async def __download():
-        while not writer.is_closing():
-            data = await pr.read(BUFFER)
-            if len(data) == 0:
-                return
-            await download_queue.put(len(data))
-            writer.write(data)
-
-    asyncio.create_task(__download())
-    asyncio.create_task(__upload())
-
+    asyncio.create_task(copy(writer, pr, download_queue))
+    asyncio.create_task(copy(pw, reader, upload_queue))
