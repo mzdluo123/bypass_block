@@ -14,5 +14,5 @@ async def print_bw():
             upload += upload_queue.get_nowait()
         download_queue.empty()
         upload_queue.empty()
-        print(f"D: {download / 1024}KB U:{upload / 1024}KB")
+        print(f"D: {download / 1024/2}KB U:{upload / 1024/2}KB")
         await asyncio.sleep(2)

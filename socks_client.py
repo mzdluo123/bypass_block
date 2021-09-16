@@ -36,6 +36,10 @@ async def handle_socks(reader: asyncio.StreamReader, writer: asyncio.StreamWrite
         reader.feed_eof()
     if atyp == b'\x01':
         address = ipaddress.IPv4Address(await reader.readexactly(4))
+        if str(address) == "0.0.0.0":
+            writer.close()
+            reader.feed_eof()
+            return
     if atyp == b'\x03':
         size = await reader.readexactly(1)
         address = await reader.readexactly(int.from_bytes(size,'little'))
