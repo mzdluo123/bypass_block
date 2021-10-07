@@ -20,7 +20,8 @@ async def handle_socks(reader: asyncio.StreamReader, writer: asyncio.StreamWrite
     +----+----------+----------+
     '''
     p = struct.unpack("!bb", await reader.readexactly(2))
-    _methods = struct.unpack("!p", await reader.readexactly(p[1]))
+    await reader.readexactly(p[1])
+    #_methods = struct.unpack("!p", await reader.readexactly(p[1]))
     if p[0] != 5:
         reader.feed_eof()
         writer.close()
@@ -52,8 +53,9 @@ async def handle_socks(reader: asyncio.StreamReader, writer: asyncio.StreamWrite
         size = await reader.readexactly(1)
         address = await reader.readexactly(int.from_bytes(size, 'little'))
         port = int.from_bytes(await reader.readexactly(2), 'big', signed=False)
-        address = await asyncio.get_running_loop().getaddrinfo(address.decode(), port,family=socket.AF_INET)
-        address = address[0][4][0]
+        address = address.decode()
+        # address = await asyncio.get_running_loop().getaddrinfo(address, port,family=socket.AF_INET)
+        # address = address[0][4][0]
     if atype == 1:
         address = ipaddress.IPv4Address(await reader.readexactly(4))
         port = int.from_bytes(await reader.readexactly(2), 'big', signed=False)
