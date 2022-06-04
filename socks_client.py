@@ -64,6 +64,7 @@ async def handle_socks(reader: asyncio.StreamReader, writer: asyncio.StreamWrite
     print(f"SOCKS {connection[0]}:{connection[1]} --{proxy}--> {address}:{port}")
     pw.write(f'CONNECT {address}:{port} HTTP/1.1\r\n'.encode())
     pw.write(b"X-T5-Auth: ZjQxNDIh\r\n")
+    pw.write(b"User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 SP-engine/2.44.0 baiduboxapp/13.6.0.10 (Baidu; P2 15.0)\r\n")
     pw.write(b'Proxy-Connection: Keep-Alive\r\n\r\n')
     '''+----+-----+-------+------+----------+----------+
 |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
